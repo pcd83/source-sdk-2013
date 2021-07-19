@@ -704,6 +704,12 @@ $Project
 			}
 		}
 
+		$Folder "pdmod"
+		{
+			$File	"pdmod\weapon_blink.h"
+			$File	"pdmod\weapon_blink.cpp"
+		}
+
 		$Folder	"Precompiled Header"
 		{
 			$File	"stdafx.cpp"

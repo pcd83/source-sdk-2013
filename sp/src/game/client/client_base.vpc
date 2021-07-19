@@ -505,6 +505,12 @@ $Project
 		$File	"$SRCDIR\public\haptics\haptic_msgs.cpp"	[!$X360]
 		$File	"$SRCDIR\public\haptics\haptic_utils.cpp"	[$WIN32&&!$X360]
 
+		$Folder "pdmod"
+		{
+			$File	"pdmod\c_weapon_blink.h"
+			$File	"pdmod\c_weapon_blink.cpp"
+		}
+
 		$Folder	"Sixense"
 		{
 			$File	"sixense\in_sixense.cpp"
