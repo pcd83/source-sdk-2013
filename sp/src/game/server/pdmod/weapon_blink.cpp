@@ -42,6 +42,15 @@ public:
 
 	DECLARE_SERVERCLASS();
 
+	//---------------------------------------------------
+	// pdmod overrides
+	//---------------------------------------------------
+public:
+	virtual void PrimaryAttack();
+private:
+	void TryTeleport();
+public:
+
 	void			Precache();
 	void			AddViewKick();
 	void			SecondaryAttack();
@@ -306,6 +315,72 @@ void CWeaponMP5::AddViewKick()
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Shoot bullets but also teleport player
+// NOTE(pd): pdmod override
+//-----------------------------------------------------------------------------
+void CWeaponMP5::PrimaryAttack()
+{
+	BaseClass::PrimaryAttack();
+	TryTeleport();
+}
+
+void CWeaponMP5::TryTeleport()
+{
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	IPhysicsObject *pPhysObject = pPlayer->VPhysicsGetObject();
+
+	//QAngle absEyeAngles = pPlayer->GetAbsAngles();
+	QAngle absEyeAngles = pPlayer->EyeAngles();
+
+	Vector forward, right, up;
+	AngleVectors(absEyeAngles, &forward, &right, &up);
+
+	Vector mins = pPlayer->GetPlayerMins();
+	Vector maxs = pPlayer->GetPlayerMaxs();
+	//maxs.z = mins.z + 1;
+
+	//const bool isTeleport = true;
+	Vector startPosition, endPosition;
+	QAngle angles;
+
+	pPhysObject->GetPosition(&startPosition, &angles);
+
+	endPosition = startPosition;
+
+	endPosition = startPosition + forward * 10000;
+
+	Ray_t ray;
+	ray.Init(startPosition, endPosition, mins, maxs);
+	trace_t trace;
+
+#if 1
+	//UTIL_TraceRay(ray, MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_NONE, &trace);
+	UTIL_TraceRay(ray, MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_DEBRIS, &trace);
+#else
+	CTraceFilterWorldOnly filter;
+	UTIL_TraceHull(startPosition, endPosition, mins, maxs, MASK_SOLID_BRUSHONLY, &filter, &trace);
+#endif
+
+	if (trace.DidHit())
+	{
+
+		Vector up, down;
+		AngleVectors(pPlayer->GetAbsAngles(), NULL, NULL, &up);
+
+		Vector teleportPosition = trace.endpos + up * 10; // +100 * forward;
+
+		ConMsg("Pistol Teleport\n");
+		ConMsg(" -- Start Position: %f, %f, %f\n", startPosition.x, startPosition.y, startPosition.z);
+		ConMsg(" -- End Position: %f, %f, %f\n", endPosition.x, endPosition.y, endPosition.z);
+		ConMsg(" -- Trace Result End Position: %f, %f, %f\n", trace.endpos.x, trace.endpos.y, trace.endpos.z);
+
+		pPlayer->Teleport(&teleportPosition, NULL, NULL);
+
+		ConMsg(" -- End\n");
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CWeaponMP5::SecondaryAttack()
@@ -341,3 +416,4 @@ const WeaponProficiencyInfo_t *CWeaponMP5::GetProficiencyValues()
 
 	return proficiencyTable;
 }
+
