@@ -509,6 +509,8 @@ $Project
 		{
 			$File	"pdmod\c_weapon_blink.h"
 			$File	"pdmod\c_weapon_blink.cpp"
+			$File	"pdmod\c_entities_blink.h"
+			$File	"pdmod\c_entities_blink.cpp"
 		}
 
 		$Folder	"Sixense"

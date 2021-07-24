@@ -1868,6 +1868,9 @@
     <ClInclude Include="hl2\hud_suitpower.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
+    <ClInclude Include="pdmod\c_entities_blink.h">
+      <Filter>Source Files\pdmod</Filter>
+    </ClInclude>
     <ClInclude Include="pdmod\c_weapon_blink.h">
       <Filter>Source Files\pdmod</Filter>
     </ClInclude>
@@ -3162,6 +3165,9 @@
     </ClCompile>
     <ClCompile Include="hl2\vgui_rootpanel_hl2.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="pdmod\c_entities_blink.cpp">
+      <Filter>Source Files\pdmod</Filter>
     </ClCompile>
     <ClCompile Include="pdmod\c_weapon_blink.cpp">
       <Filter>Source Files\pdmod</Filter>

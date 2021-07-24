@@ -52,6 +52,8 @@ $Project "Server (Episodic)"
 		{
 			$File	"pdmod\weapon_blink.h"
 			$File	"pdmod\weapon_blink.cpp"
+			$File	"pdmod\entities_blink.h"
+			$File	"pdmod\entities_blink.cpp"
 		}
 	
 		$Folder	"HL2 DLL"
