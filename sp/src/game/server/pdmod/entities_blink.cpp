@@ -23,7 +23,8 @@ private:
 };
 
 LINK_ENTITY_TO_CLASS(my_logical_entity, CMyLogicalEntity);
-	BEGIN_DATADESC(CMyLogicalEntity)
+
+BEGIN_DATADESC(CMyLogicalEntity)
 	DEFINE_FIELD(m_nCounter, FIELD_INTEGER),
 	DEFINE_KEYFIELD(m_nThreshold, FIELD_INTEGER, "threshold"),
 	DEFINE_INPUTFUNC(FIELD_VOID, "Tick", InputTick),
@@ -32,6 +33,8 @@ END_DATADESC()
 
 void CMyLogicalEntity::InputTick(inputdata_t & inputData)
 {
+	ConMsg("CMyLogicalEntity::InputTick\n");
+
 	m_nCounter++;
 
 	if (m_nCounter >= m_nThreshold)
