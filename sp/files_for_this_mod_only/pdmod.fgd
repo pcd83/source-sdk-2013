@@ -1,0 +1,13 @@
+@include "base.fgd"
+
+@PointClass base(Targetname) = my_logical_entity : "Tutorial logical entity."
+[
+	threshold(integer) : "Threshold" : 1 : "Threshold value."
+	input Tick(void) : "Adds one tick to the entity's count."
+	output OnThreshold(void) : "Threshold was hit."
+]
+
+@PointClass base(Targetname) studio("models/gibs/airboat_broken_engine.mdl")= my_model_entity :  "Tutorial model entity."
+[
+	input Toggle(void) : "Toggle movement."
+]
