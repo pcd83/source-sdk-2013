@@ -11,3 +11,8 @@
 [
 	input Toggle(void) : "Toggle movement."
 ]
+
+@SolidClass base(Targetname) = my_brush_entity : "Tutorial brush entity."
+[
+	
+]

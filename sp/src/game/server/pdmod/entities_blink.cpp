@@ -1,4 +1,5 @@
 #include "cbase.h"
+#include "triggers.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -142,4 +143,55 @@ void CMyModelEntity::InputToggle(inputdata_t & inputData)
 
 		m_bActive = false;
 	}
+}
+
+//*************************************************
+// My Model Entity
+//*************************************************
+class CMyBrushEntity : public CBaseTrigger
+{
+public:
+	DECLARE_CLASS(CMyBrushEntity, CBaseTrigger);
+	DECLARE_DATADESC();
+
+	void Spawn();
+	void BrushTouch(CBaseEntity * pOther);
+};
+
+LINK_ENTITY_TO_CLASS(my_brush_entity, CMyBrushEntity);
+
+BEGIN_DATADESC(CMyBrushEntity)
+	DEFINE_ENTITYFUNC(BrushTouch),
+END_DATADESC()
+
+void CMyBrushEntity::Spawn()
+{
+	BaseClass::Spawn();
+
+	SetTouch(&CMyBrushEntity::BrushTouch); // we want to capture touches from other entities
+
+	SetSolid(SOLID_VPHYSICS); // we should collide with physics
+
+	SetModel(STRING(GetModelName())); // use our brush model
+
+	SetMoveType(MOVETYPE_PUSH); // push things out of our awy
+
+	VPhysicsInitShadow(false, false); // Create physics hull info
+}
+
+void CMyBrushEntity::BrushTouch(CBaseEntity* pOther)
+{
+	DevMsg("CMyBrushEntity::BrushTouch\n");
+
+	const trace_t &tr = GetTouchTrace();
+
+	Vector vecPushDir = tr.plane.normal;
+	vecPushDir.Negate();
+	vecPushDir.z = 0;
+
+	// Uncomment this line to print plane information to the console in developer mode
+	//DevMsg ( "%s (%s) touch plane's normal: [%f %f]\n", GetClassname(), GetDebugName(),tr.plane.normal.x, tr.plane.normal.y );
+
+	// Move slowly in that direction
+	LinearMove(GetAbsOrigin() + (vecPushDir * 64.0f), 32.0f);
 }
