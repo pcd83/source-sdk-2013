@@ -432,4 +432,9 @@ void CWeaponMP5::DEBUG_SpawnMyModelEntity()
 	AngleVectors(absEyeAngles, &forward, &right, &up);
 
 	Create("my_model_entity", GetAbsOrigin() + forward * 100, absEyeAngles);
+
+	// IPhysicsEnvironment 
+	// virtual IPhysicsSpring	*CreateSpring( IPhysicsObject *pObjectStart, IPhysicsObject *pObjectEnd, springparams_t *pParams ) = 0;
+	// See CBarnacleTongueTip::CreateSpring
+	// IPhysicsEnvironment  is just a "physenv" global
 }
