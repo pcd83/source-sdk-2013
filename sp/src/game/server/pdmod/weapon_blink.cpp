@@ -49,6 +49,8 @@ public:
 	virtual void PrimaryAttack();
 private:
 	void TryTeleport();
+	void DEBUG_SpawnMyModelEntity();
+
 public:
 
 	void			Precache();
@@ -322,7 +324,8 @@ void CWeaponMP5::AddViewKick()
 void CWeaponMP5::PrimaryAttack()
 {
 	BaseClass::PrimaryAttack();
-	TryTeleport();
+	//TryTeleport();
+	DEBUG_SpawnMyModelEntity();
 }
 
 void CWeaponMP5::TryTeleport()
@@ -418,3 +421,15 @@ const WeaponProficiencyInfo_t *CWeaponMP5::GetProficiencyValues()
 	return proficiencyTable;
 }
 
+void CWeaponMP5::DEBUG_SpawnMyModelEntity()
+{
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+
+	//QAngle absEyeAngles = pPlayer->GetAbsAngles();
+	QAngle absEyeAngles = pPlayer->EyeAngles();
+
+	Vector forward, right, up;
+	AngleVectors(absEyeAngles, &forward, &right, &up);
+
+	Create("my_model_entity", GetAbsOrigin() + forward * 100, absEyeAngles);
+}
