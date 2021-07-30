@@ -23,10 +23,16 @@
 #include "rumble_shared.h"
 #include "gamestats.h"
 
+#include "physics_saverestore.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 extern ConVar sk_plr_dmg_smg1_grenade;
+
+#define TELEPORT_END_ENTITY_DISTANCE	100
+#define TELEPORT_SPRING_CONSTANT		10000
+#define TELEPORT_SPRING_DAMPING			20
 
 //-----------------------------------------------------------------------------
 // CWeaponMP5
@@ -50,6 +56,9 @@ public:
 private:
 	void TryTeleport();
 	void DEBUG_SpawnMyModelEntity();
+
+	CBaseEntity * m_pEndEntity;
+	IPhysicsSpring * m_pSpring;
 
 public:
 
@@ -123,6 +132,7 @@ LINK_ENTITY_TO_CLASS(weapon_mp5, CWeaponMP5);
 PRECACHE_WEAPON_REGISTER(weapon_mp5);
 
 BEGIN_DATADESC(CWeaponMP5)
+	DEFINE_PHYSPTR(m_pSpring),
 END_DATADESC()
 
 acttable_t CWeaponMP5::m_acttable[] =
@@ -186,6 +196,9 @@ CWeaponMP5::CWeaponMP5()
 {
 	m_fMinRange1 = 0; // No minimum range
 	m_fMaxRange1 = 1400;
+
+	m_pEndEntity = NULL;
+	m_pSpring = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -431,10 +444,29 @@ void CWeaponMP5::DEBUG_SpawnMyModelEntity()
 	Vector forward, right, up;
 	AngleVectors(absEyeAngles, &forward, &right, &up);
 
-	Create("my_model_entity", GetAbsOrigin() + forward * 100, absEyeAngles);
+	Vector endPosition = GetAbsOrigin() + forward * TELEPORT_END_ENTITY_DISTANCE;
+
+	m_pEndEntity = Create("my_model_entity", endPosition, absEyeAngles);
 
 	// IPhysicsEnvironment 
 	// virtual IPhysicsSpring	*CreateSpring( IPhysicsObject *pObjectStart, IPhysicsObject *pObjectEnd, springparams_t *pParams ) = 0;
 	// See CBarnacleTongueTip::CreateSpring
 	// IPhysicsEnvironment  is just a "physenv" global
+
+	springparams_t springParams;
+	springParams.constant = TELEPORT_SPRING_CONSTANT;
+	springParams.damping = TELEPORT_SPRING_DAMPING;
+	springParams.naturalLength = TELEPORT_END_ENTITY_DISTANCE;
+	springParams.relativeDamping = 10;
+	springParams.startPosition = GetAbsOrigin();
+	springParams.endPosition = endPosition;
+	springParams.useLocalPositions = false;
+
+	if (m_pSpring)
+	{
+		physenv->DestroySpring(m_pSpring);
+		m_pSpring = NULL;
+	}
+
+	//m_pSpring = physenv->CreateSpring(VPhysicsGetObject(), m_pEndEntity->VPhysicsGetObject(), &springParams);
 }
