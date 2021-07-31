@@ -58,7 +58,8 @@ private:
 	void DEBUG_SpawnMyModelEntity();
 
 	CBaseEntity * m_pEndEntity;
-	IPhysicsSpring * m_pSpring;
+	//IPhysicsSpring * m_pSpring;
+	CBaseEntity * m_pSpring;
 
 public:
 
@@ -132,7 +133,7 @@ LINK_ENTITY_TO_CLASS(weapon_mp5, CWeaponMP5);
 PRECACHE_WEAPON_REGISTER(weapon_mp5);
 
 BEGIN_DATADESC(CWeaponMP5)
-	DEFINE_PHYSPTR(m_pSpring),
+	//DEFINE_PHYSPTR(m_pSpring),
 END_DATADESC()
 
 acttable_t CWeaponMP5::m_acttable[] =
@@ -464,9 +465,20 @@ void CWeaponMP5::DEBUG_SpawnMyModelEntity()
 
 	if (m_pSpring)
 	{
-		physenv->DestroySpring(m_pSpring);
+		//physenv->DestroySpring(m_pSpring);
+		UTIL_Remove(m_pSpring);
 		m_pSpring = NULL;
 	}
 
+	m_pSpring = Create("phys_spring", GetAbsOrigin(), absEyeAngles);
+
+	/*
+	IPhysicsObject *pPhys = m_pEndEntity->VPhysicsInitShadow(false, false);
+	if (pPhys)
+	{
+		pPhys->SetMass(500);
+	}
+	*/
+	//m_pSpring = physenv->CreateSpring(m_pEndEntity->VPhysicsGetObject(), VPhysicsGetObject(), &springParams);
 	//m_pSpring = physenv->CreateSpring(VPhysicsGetObject(), m_pEndEntity->VPhysicsGetObject(), &springParams);
 }
