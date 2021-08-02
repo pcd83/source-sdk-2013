@@ -215,6 +215,9 @@ public:
 	virtual void UpdateOnRemove();
 	virtual void VPhysicsUpdate(IPhysicsObject *pPhysics);
 
+	void UpdateSpringPosition(Vector position);
+	void SpringThink();
+
 private:
 	IPhysicsSpring * m_pPhysSpring;
 };
@@ -224,6 +227,7 @@ LINK_ENTITY_TO_CLASS(blink_spring, CBlinkSpringEntity);
 BEGIN_DATADESC(CBlinkSpringEntity)
 DEFINE_PHYSPTR(m_pPhysSpring),
 //DEFINE_ENTITYFUNC(BrushTouch),
+DEFINE_THINKFUNC(SpringThink),
 END_DATADESC()
 
 CBlinkSpringEntity::CBlinkSpringEntity()
@@ -242,6 +246,9 @@ void CBlinkSpringEntity::Spawn()
 	BaseClass::Spawn();
 
 	m_pPhysSpring = NULL;
+
+	SetThink(&CBlinkSpringEntity::SpringThink);
+	SetNextThink(gpGlobals->curtime + 0.5f);
 }
 
 void CBlinkSpringEntity::Precache()
@@ -264,4 +271,20 @@ void CBlinkSpringEntity::VPhysicsUpdate(IPhysicsObject *pPhysics)
 {
 	BaseClass::VPhysicsUpdate(pPhysics);
 
+}
+
+void CBlinkSpringEntity::UpdateSpringPosition(Vector position)
+{
+	m_pPhysSpring->SetSpringLength(1000);
+}
+
+void CBlinkSpringEntity::SpringThink()
+{
+	SetNextThink(gpGlobals->curtime + 0.1f);
+
+	if (m_pPhysSpring)
+	{
+		Vector vec;
+		UpdateSpringPosition(vec);
+	}
 }
