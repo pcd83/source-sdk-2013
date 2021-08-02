@@ -1,5 +1,7 @@
 #include "cbase.h"
 #include "triggers.h"
+#include "vphysics_interface.h"
+#include "physics_saverestore.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -194,4 +196,72 @@ void CMyBrushEntity::BrushTouch(CBaseEntity* pOther)
 
 	// Move slowly in that direction
 	LinearMove(GetAbsOrigin() + (vecPushDir * 64.0f), 32.0f);
+}
+
+//*************************************************
+// Spring Entity
+//*************************************************
+#define BLINK_SPRING_ENTITY_MODEL_NAME	"models/props_junk/rock001a.mdl"
+
+class CBlinkSpringEntity : public CBaseAnimating
+{
+public:
+	CBlinkSpringEntity();
+	DECLARE_CLASS(CBlinkSpringEntity, CBaseAnimating);
+	DECLARE_DATADESC();
+
+	virtual void Spawn(void);
+	virtual void Precache(void);
+	virtual void UpdateOnRemove();
+	virtual void VPhysicsUpdate(IPhysicsObject *pPhysics);
+
+private:
+	IPhysicsSpring * m_pPhysSpring;
+};
+
+LINK_ENTITY_TO_CLASS(blink_spring, CBlinkSpringEntity);
+
+BEGIN_DATADESC(CBlinkSpringEntity)
+DEFINE_PHYSPTR(m_pPhysSpring),
+//DEFINE_ENTITYFUNC(BrushTouch),
+END_DATADESC()
+
+CBlinkSpringEntity::CBlinkSpringEntity()
+: m_pPhysSpring(NULL)
+{}
+
+void CBlinkSpringEntity::Spawn()
+{
+	Precache();
+	SetModel(BLINK_SPRING_ENTITY_MODEL_NAME);
+	AddEffects(EF_NODRAW);
+
+	// We don't want this to be solid, because we don't want it to collide with the barnacle.
+	SetSolid(SOLID_VPHYSICS);
+	AddSolidFlags(FSOLID_NOT_SOLID);
+	BaseClass::Spawn();
+
+	m_pPhysSpring = NULL;
+}
+
+void CBlinkSpringEntity::Precache()
+{
+	PrecacheModel(BLINK_SPRING_ENTITY_MODEL_NAME);
+	BaseClass::Precache();
+}
+
+void CBlinkSpringEntity::UpdateOnRemove()
+{
+	if (m_pPhysSpring)
+	{
+		physenv->DestroySpring(m_pPhysSpring);
+		m_pPhysSpring = NULL;
+	}
+	BaseClass::UpdateOnRemove();
+}
+
+void CBlinkSpringEntity::VPhysicsUpdate(IPhysicsObject *pPhysics)
+{
+	BaseClass::VPhysicsUpdate(pPhysics);
+
 }

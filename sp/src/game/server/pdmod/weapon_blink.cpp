@@ -30,7 +30,7 @@
 
 extern ConVar sk_plr_dmg_smg1_grenade;
 
-#define TELEPORT_END_ENTITY_DISTANCE	100
+#define TELEPORT_END_ENTITY_DISTANCE	10
 #define TELEPORT_SPRING_CONSTANT		10000
 #define TELEPORT_SPRING_DAMPING			20
 
@@ -53,13 +53,21 @@ public:
 	//---------------------------------------------------
 public:
 	virtual void PrimaryAttack();
+
+	virtual void Activate()
+	{
+		DEBUG_SpawnMyModelEntity();
+		BaseClass::Activate();
+	}
+
 private:
 	void TryTeleport();
 	void DEBUG_SpawnMyModelEntity();
 
 	CBaseEntity * m_pEndEntity;
-	//IPhysicsSpring * m_pSpring;
+	IPhysicsSpring * m_pPhysSpring;
 	CBaseEntity * m_pSpring;
+
 
 public:
 
@@ -133,7 +141,7 @@ LINK_ENTITY_TO_CLASS(weapon_mp5, CWeaponMP5);
 PRECACHE_WEAPON_REGISTER(weapon_mp5);
 
 BEGIN_DATADESC(CWeaponMP5)
-	//DEFINE_PHYSPTR(m_pSpring),
+	DEFINE_PHYSPTR(m_pPhysSpring),
 END_DATADESC()
 
 acttable_t CWeaponMP5::m_acttable[] =
@@ -470,7 +478,14 @@ void CWeaponMP5::DEBUG_SpawnMyModelEntity()
 		m_pSpring = NULL;
 	}
 
-	m_pSpring = Create("phys_spring", GetAbsOrigin(), absEyeAngles);
+	
+	IPhysicsObject *pPlayerPhysObject = pPlayer->VPhysicsGetObject();
+
+	m_pPhysSpring = physenv->CreateSpring(pPlayerPhysObject, m_pEndEntity->VPhysicsGetObject(), &springParams);
+	
+	//IPhysicsObject * startObj = spring->GetStartObject();
+	//startObj = NULL;
+	//m_pSpring = Create("phys_spring", GetAbsOrigin(), absEyeAngles);
 
 	/*
 	IPhysicsObject *pPhys = m_pEndEntity->VPhysicsInitShadow(false, false);
