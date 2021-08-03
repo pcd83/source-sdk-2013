@@ -288,3 +288,76 @@ void CBlinkSpringEntity::SpringThink()
 		UpdateSpringPosition(vec);
 	}
 }
+
+//*************************************************
+// Teleport target
+//*************************************************
+#define BLINK_TELEPORT_TARGET_MODEL_NAME "models/props_junk/rock001a.mdl"
+
+class CBlinkTeleportTarget : public CBaseAnimating
+{
+	DECLARE_CLASS(CBlinkTeleportTarget, CBaseAnimating);
+
+public:
+	DECLARE_DATADESC();
+
+	virtual void Spawn(void);
+	virtual void Precache(void);
+	virtual void UpdateOnRemove();
+	virtual void VPhysicsUpdate(IPhysicsObject *pPhysics);
+
+	virtual int	UpdateTransmitState(void);
+
+	bool						CreateSpring(CBaseAnimating *pTongueRoot);
+	static CBlinkTeleportTarget	*CreateTeleportTargetEnd(CBlinkSpringEntity *pSpringEntity, CBaseAnimating *pTongueStart, const Vector &vecOrigin, const QAngle &vecAngles);
+	static CBlinkTeleportTarget	*CreateTeleportTargetBeginning(const Vector &vecOrigin, const QAngle &vecAngles);
+
+	IPhysicsSpring			*m_pSpring;
+
+private:
+	CHandle<CBlinkSpringEntity>	m_hSpringEntity;
+};
+
+LINK_ENTITY_TO_CLASS(blink_teleport_target, CBlinkTeleportTarget);
+
+BEGIN_DATADESC(CBlinkTeleportTarget)
+
+//DEFINE_FIELD(m_hBarnacle, FIELD_EHANDLE),
+DEFINE_PHYSPTR(m_pSpring),
+
+END_DATADESC()
+
+void CBlinkTeleportTarget::Spawn()
+{
+	Precache();
+	SetModel(BLINK_TELEPORT_TARGET_MODEL_NAME);
+	AddEffects(EF_NODRAW);
+
+	// We don't want this to be solid, because we don't want it to collide with the barnacle.
+	SetSolid(SOLID_VPHYSICS);
+	AddSolidFlags(FSOLID_NOT_SOLID);
+	BaseClass::Spawn();
+
+	m_pSpring = NULL;
+}
+
+void CBlinkTeleportTarget::Precache()
+{
+	PrecacheModel(BLINK_TELEPORT_TARGET_MODEL_NAME);
+	BaseClass::Precache();
+}
+
+void CBlinkTeleportTarget::UpdateOnRemove()
+{
+	BaseClass::UpdateOnRemove();
+}
+
+void CBlinkTeleportTarget::VPhysicsUpdate(IPhysicsObject *pPhysics)
+{
+	BaseClass::VPhysicsUpdate(pPhysics);
+}
+
+int	CBlinkTeleportTarget::UpdateTransmitState()
+{
+	return SetTransmitState(FL_EDICT_PVSCHECK);
+}
