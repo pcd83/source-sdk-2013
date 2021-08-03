@@ -201,6 +201,13 @@ void CMyBrushEntity::BrushTouch(CBaseEntity* pOther)
 //*************************************************
 // Spring Entity
 //*************************************************
+
+//*************************************************
+//
+// NOTE(pd): See CBarnacleTongueTip!
+//
+//*************************************************
+
 #define BLINK_SPRING_ENTITY_MODEL_NAME	"models/props_junk/rock001a.mdl"
 
 class CBlinkSpringEntity : public CBaseAnimating
