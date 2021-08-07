@@ -296,6 +296,8 @@ void CBlinkSpringEntity::SpringThink()
 	}
 }
 
+class CBlinkTeleportEntity;
+
 //*************************************************
 // Teleport target
 //*************************************************
@@ -316,13 +318,13 @@ public:
 	virtual int	UpdateTransmitState(void);
 
 	bool						CreateSpring(CBaseAnimating *pTongueRoot);
-	static CBlinkTeleportTarget	*CreateTeleportTargetEnd(CBlinkSpringEntity *pSpringEntity, CBaseAnimating *pTongueStart, const Vector &vecOrigin, const QAngle &vecAngles);
+	static CBlinkTeleportTarget	*CreateTeleportTargetEnd(CBlinkTeleportEntity *pSpringEntity, CBaseAnimating *pTongueStart, const Vector &vecOrigin, const QAngle &vecAngles);
 	static CBlinkTeleportTarget	*CreateTeleportTargetBeginning(const Vector &vecOrigin, const QAngle &vecAngles);
 
 	IPhysicsSpring			*m_pSpring;
 
 private:
-	CHandle<CBlinkSpringEntity>	m_hSpringEntity;
+	CHandle<CBlinkTeleportEntity>	m_hSpringEntity;
 };
 
 LINK_ENTITY_TO_CLASS(blink_teleport_target, CBlinkTeleportTarget);
@@ -333,6 +335,45 @@ BEGIN_DATADESC(CBlinkTeleportTarget)
 DEFINE_PHYSPTR(m_pSpring),
 
 END_DATADESC()
+
+//****************************************************************************************
+class CBlinkTeleportEntity : public CBaseAnimating
+{
+	DECLARE_CLASS(CBlinkTeleportEntity, CBaseAnimating);
+
+public:
+	DECLARE_DATADESC();
+
+	virtual void Activate();
+
+private:
+	CHandle<CBlinkTeleportTarget>	m_hStartEntity;
+	CHandle<CBlinkTeleportTarget>	m_hEndEntity;
+
+	Vector m_vecRoot, m_vecTip;
+};
+
+void CBlinkTeleportEntity::Activate()
+{
+	if (m_hStartEntity)
+		return;
+
+	m_hStartEntity = CBlinkTeleportTarget::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
+	m_hEndEntity = CBlinkTeleportTarget::CreateTeleportTargetEnd(NULL, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
+}
+
+LINK_ENTITY_TO_CLASS(blink_teleport_target_entity, CBlinkTeleportEntity);
+
+BEGIN_DATADESC(CBlinkTeleportEntity)
+DEFINE_FIELD(m_hStartEntity, FIELD_EHANDLE),
+DEFINE_FIELD(m_hEndEntity, FIELD_EHANDLE),
+DEFINE_FIELD(m_vecRoot, FIELD_POSITION_VECTOR),
+DEFINE_FIELD(m_vecTip, FIELD_POSITION_VECTOR),
+END_DATADESC()
+
+//*******************************************************************************************
+
+
 
 void CBlinkTeleportTarget::Spawn()
 {
@@ -368,3 +409,47 @@ int	CBlinkTeleportTarget::UpdateTransmitState()
 {
 	return SetTransmitState(FL_EDICT_PVSCHECK);
 }
+
+bool CBlinkTeleportTarget::CreateSpring(CBaseAnimating *pTongueRoot)
+{
+	return true;
+}
+
+CBlinkTeleportTarget * CBlinkTeleportTarget::CreateTeleportTargetEnd(CBlinkTeleportEntity *pSpringEntity, CBaseAnimating *pTeleportStart, const Vector &vecOrigin, const QAngle &vecAngles)
+{
+	CBlinkTeleportTarget *pTeleportTarget = (CBlinkTeleportTarget *)CBaseEntity::Create("blink_teleport_target", vecOrigin, vecAngles);
+	if (!pTeleportTarget)
+		return NULL;
+
+	pTeleportTarget->VPhysicsInitNormal(pTeleportTarget->GetSolid(), pTeleportTarget->GetSolidFlags(), false);
+	if (!pTeleportTarget->CreateSpring(pTeleportStart))
+		return NULL;
+
+	// Set the backpointer to the barnacle
+	pTeleportTarget->m_hSpringEntity = pSpringEntity;
+
+	// Don't collide with the world
+	IPhysicsObject *pTeleportTargetPhys = pTeleportTarget->VPhysicsGetObject();
+
+	// turn off all floating / fluid simulation
+	pTeleportTargetPhys->SetCallbackFlags(pTeleportTargetPhys->GetCallbackFlags() & (~CALLBACK_DO_FLUID_SIMULATION));
+
+	return pTeleportTarget;
+}
+
+CBlinkTeleportTarget * CBlinkTeleportTarget::CreateTeleportTargetBeginning(const Vector &vecOrigin, const QAngle &vecAngles)
+{
+	CBlinkTeleportTarget *pTT = (CBlinkTeleportTarget *)CBaseEntity::Create("blink_teleport_target", vecOrigin, vecAngles);
+	if (!pTT)
+		return NULL;
+
+	pTT->AddSolidFlags(FSOLID_NOT_SOLID);
+
+	// Disable movement on the root, we'll move this thing manually.
+	pTT->VPhysicsInitShadow(false, false);
+	pTT->SetMoveType(MOVETYPE_NONE);
+
+	return pTT;
+}
+
+
