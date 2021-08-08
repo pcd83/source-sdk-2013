@@ -148,7 +148,7 @@ void CMyModelEntity::InputToggle(inputdata_t & inputData)
 }
 
 //*************************************************
-// My Model Entity
+// My Brush Entity
 //*************************************************
 class CMyBrushEntity : public CBaseTrigger
 {
@@ -208,6 +208,7 @@ void CMyBrushEntity::BrushTouch(CBaseEntity* pOther)
 //
 //*************************************************
 
+/*
 #define BLINK_SPRING_ENTITY_MODEL_NAME	"models/props_junk/rock001a.mdl"
 
 class CBlinkSpringEntity : public CBaseAnimating
@@ -295,8 +296,9 @@ void CBlinkSpringEntity::SpringThink()
 		UpdateSpringPosition(vec);
 	}
 }
+*/
 
-class CBlinkTeleportEntity;
+class CBlinkTeleporter;
 
 //*************************************************
 // Teleport target
@@ -318,13 +320,13 @@ public:
 	virtual int	UpdateTransmitState(void);
 
 	bool						CreateSpring(CBaseAnimating *pTongueRoot);
-	static CBlinkTeleportTarget	*CreateTeleportTargetEnd(CBlinkTeleportEntity *pSpringEntity, CBaseAnimating *pTongueStart, const Vector &vecOrigin, const QAngle &vecAngles);
+	static CBlinkTeleportTarget	*CreateTeleportTargetEnd(CBlinkTeleporter *pSpringEntity, CBaseAnimating *pTongueStart, const Vector &vecOrigin, const QAngle &vecAngles);
 	static CBlinkTeleportTarget	*CreateTeleportTargetBeginning(const Vector &vecOrigin, const QAngle &vecAngles);
 
 	IPhysicsSpring			*m_pSpring;
 
 private:
-	CHandle<CBlinkTeleportEntity>	m_hSpringEntity;
+	CHandle<CBlinkTeleporter>	m_hTeleporter;
 };
 
 LINK_ENTITY_TO_CLASS(blink_teleport_target, CBlinkTeleportTarget);
@@ -337,9 +339,9 @@ DEFINE_PHYSPTR(m_pSpring),
 END_DATADESC()
 
 //****************************************************************************************
-class CBlinkTeleportEntity : public CBaseAnimating
+class CBlinkTeleporter : public CBaseAnimating
 {
-	DECLARE_CLASS(CBlinkTeleportEntity, CBaseAnimating);
+	DECLARE_CLASS(CBlinkTeleporter, CBaseAnimating);
 
 public:
 	DECLARE_DATADESC();
@@ -347,29 +349,43 @@ public:
 	virtual void Activate();
 
 private:
+	void InitRootPosition();
+
 	CHandle<CBlinkTeleportTarget>	m_hStartEntity;
 	CHandle<CBlinkTeleportTarget>	m_hEndEntity;
 
 	Vector m_vecRoot, m_vecTip;
 };
 
-void CBlinkTeleportEntity::Activate()
+void CBlinkTeleporter::Activate()
 {
 	if (m_hStartEntity)
 		return;
 
 	m_hStartEntity = CBlinkTeleportTarget::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
 	m_hEndEntity = CBlinkTeleportTarget::CreateTeleportTargetEnd(NULL, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
+
+	InitRootPosition();
 }
 
-LINK_ENTITY_TO_CLASS(blink_teleport_target_entity, CBlinkTeleportEntity);
+LINK_ENTITY_TO_CLASS(blink_teleporter, CBlinkTeleporter);
 
-BEGIN_DATADESC(CBlinkTeleportEntity)
+BEGIN_DATADESC(CBlinkTeleporter)
 DEFINE_FIELD(m_hStartEntity, FIELD_EHANDLE),
 DEFINE_FIELD(m_hEndEntity, FIELD_EHANDLE),
 DEFINE_FIELD(m_vecRoot, FIELD_POSITION_VECTOR),
 DEFINE_FIELD(m_vecTip, FIELD_POSITION_VECTOR),
 END_DATADESC()
+
+void CBlinkTeleporter::InitRootPosition()
+{
+	Vector origin = GetAbsOrigin();
+	//m_vecRoot = origin - Vector(0, 0, flTongueAdj);
+	m_vecRoot = origin;
+	m_vecTip = origin;
+	CollisionProp()->MarkSurroundingBoundsDirty();
+}
+
 
 //*******************************************************************************************
 
@@ -415,7 +431,7 @@ bool CBlinkTeleportTarget::CreateSpring(CBaseAnimating *pTongueRoot)
 	return true;
 }
 
-CBlinkTeleportTarget * CBlinkTeleportTarget::CreateTeleportTargetEnd(CBlinkTeleportEntity *pSpringEntity, CBaseAnimating *pTeleportStart, const Vector &vecOrigin, const QAngle &vecAngles)
+CBlinkTeleportTarget * CBlinkTeleportTarget::CreateTeleportTargetEnd(CBlinkTeleporter *pTeleporter, CBaseAnimating *pTeleportStart, const Vector &vecOrigin, const QAngle &vecAngles)
 {
 	CBlinkTeleportTarget *pTeleportTarget = (CBlinkTeleportTarget *)CBaseEntity::Create("blink_teleport_target", vecOrigin, vecAngles);
 	if (!pTeleportTarget)
@@ -426,7 +442,7 @@ CBlinkTeleportTarget * CBlinkTeleportTarget::CreateTeleportTargetEnd(CBlinkTelep
 		return NULL;
 
 	// Set the backpointer to the barnacle
-	pTeleportTarget->m_hSpringEntity = pSpringEntity;
+	pTeleportTarget->m_hTeleporter = pTeleporter;
 
 	// Don't collide with the world
 	IPhysicsObject *pTeleportTargetPhys = pTeleportTarget->VPhysicsGetObject();
@@ -451,5 +467,4 @@ CBlinkTeleportTarget * CBlinkTeleportTarget::CreateTeleportTargetBeginning(const
 
 	return pTT;
 }
-
 
