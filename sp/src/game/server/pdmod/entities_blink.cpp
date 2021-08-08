@@ -305,9 +305,9 @@ class CBlinkTeleporter;
 //*************************************************
 #define BLINK_TELEPORT_TARGET_MODEL_NAME "models/props_junk/rock001a.mdl"
 
-class CBlinkTeleportTarget : public CBaseAnimating
+class CBlinkTeleportEndpoint : public CBaseAnimating
 {
-	DECLARE_CLASS(CBlinkTeleportTarget, CBaseAnimating);
+	DECLARE_CLASS(CBlinkTeleportEndpoint, CBaseAnimating);
 
 public:
 	DECLARE_DATADESC();
@@ -320,8 +320,8 @@ public:
 	virtual int	UpdateTransmitState(void);
 
 	bool						CreateSpring(CBaseAnimating *pTongueRoot);
-	static CBlinkTeleportTarget	*CreateTeleportTargetEnd(CBlinkTeleporter *pSpringEntity, CBaseAnimating *pTongueStart, const Vector &vecOrigin, const QAngle &vecAngles);
-	static CBlinkTeleportTarget	*CreateTeleportTargetBeginning(const Vector &vecOrigin, const QAngle &vecAngles);
+	static CBlinkTeleportEndpoint	*CreateTeleportTargetEnd(CBlinkTeleporter *pSpringEntity, CBaseAnimating *pTongueStart, const Vector &vecOrigin, const QAngle &vecAngles);
+	static CBlinkTeleportEndpoint	*CreateTeleportTargetBeginning(const Vector &vecOrigin, const QAngle &vecAngles);
 
 	IPhysicsSpring			*m_pSpring;
 
@@ -329,9 +329,9 @@ private:
 	CHandle<CBlinkTeleporter>	m_hTeleporter;
 };
 
-LINK_ENTITY_TO_CLASS(blink_teleport_target, CBlinkTeleportTarget);
+LINK_ENTITY_TO_CLASS(blink_teleport_endpoint, CBlinkTeleportEndpoint);
 
-BEGIN_DATADESC(CBlinkTeleportTarget)
+BEGIN_DATADESC(CBlinkTeleportEndpoint)
 
 //DEFINE_FIELD(m_hBarnacle, FIELD_EHANDLE),
 DEFINE_PHYSPTR(m_pSpring),
@@ -350,9 +350,10 @@ public:
 
 private:
 	void InitRootPosition();
+	void CreateStartAndEndEntities();
 
-	CHandle<CBlinkTeleportTarget>	m_hStartEntity;
-	CHandle<CBlinkTeleportTarget>	m_hEndEntity;
+	CHandle<CBlinkTeleportEndpoint>	m_hStartEntity;
+	CHandle<CBlinkTeleportEndpoint>	m_hEndEntity;
 
 	Vector m_vecRoot, m_vecTip;
 };
@@ -362,10 +363,12 @@ void CBlinkTeleporter::Activate()
 	if (m_hStartEntity)
 		return;
 
-	m_hStartEntity = CBlinkTeleportTarget::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
-	m_hEndEntity = CBlinkTeleportTarget::CreateTeleportTargetEnd(NULL, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
-
 	InitRootPosition();
+
+	m_hStartEntity = CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
+	m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(NULL, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
+
+	CreateStartAndEndEntities();
 }
 
 LINK_ENTITY_TO_CLASS(blink_teleporter, CBlinkTeleporter);
@@ -382,16 +385,26 @@ void CBlinkTeleporter::InitRootPosition()
 	Vector origin = GetAbsOrigin();
 	//m_vecRoot = origin - Vector(0, 0, flTongueAdj);
 	m_vecRoot = origin;
-	m_vecTip = origin;
+	m_vecTip = origin + Vector(0, 0, 10); // DEBUG(pd): Just put the ending endpoint above the teleporter entity
 	CollisionProp()->MarkSurroundingBoundsDirty();
 }
 
+void CBlinkTeleporter::CreateStartAndEndEntities()
+{
+	if (!m_hStartEntity)
+		return;
+
+	m_hStartEntity = CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
+	m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(this, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
+	//m_nSpitAttachment = LookupAttachment("StrikeHeadAttach");
+	Assert(m_hStartEntity && m_hEndEntity);
+}
 
 //*******************************************************************************************
 
 
 
-void CBlinkTeleportTarget::Spawn()
+void CBlinkTeleportEndpoint::Spawn()
 {
 	Precache();
 	SetModel(BLINK_TELEPORT_TARGET_MODEL_NAME);
@@ -405,35 +418,35 @@ void CBlinkTeleportTarget::Spawn()
 	m_pSpring = NULL;
 }
 
-void CBlinkTeleportTarget::Precache()
+void CBlinkTeleportEndpoint::Precache()
 {
 	PrecacheModel(BLINK_TELEPORT_TARGET_MODEL_NAME);
 	BaseClass::Precache();
 }
 
-void CBlinkTeleportTarget::UpdateOnRemove()
+void CBlinkTeleportEndpoint::UpdateOnRemove()
 {
 	BaseClass::UpdateOnRemove();
 }
 
-void CBlinkTeleportTarget::VPhysicsUpdate(IPhysicsObject *pPhysics)
+void CBlinkTeleportEndpoint::VPhysicsUpdate(IPhysicsObject *pPhysics)
 {
 	BaseClass::VPhysicsUpdate(pPhysics);
 }
 
-int	CBlinkTeleportTarget::UpdateTransmitState()
+int	CBlinkTeleportEndpoint::UpdateTransmitState()
 {
 	return SetTransmitState(FL_EDICT_PVSCHECK);
 }
 
-bool CBlinkTeleportTarget::CreateSpring(CBaseAnimating *pTongueRoot)
+bool CBlinkTeleportEndpoint::CreateSpring(CBaseAnimating *pTongueRoot)
 {
 	return true;
 }
 
-CBlinkTeleportTarget * CBlinkTeleportTarget::CreateTeleportTargetEnd(CBlinkTeleporter *pTeleporter, CBaseAnimating *pTeleportStart, const Vector &vecOrigin, const QAngle &vecAngles)
+CBlinkTeleportEndpoint * CBlinkTeleportEndpoint::CreateTeleportTargetEnd(CBlinkTeleporter *pTeleporter, CBaseAnimating *pTeleportStart, const Vector &vecOrigin, const QAngle &vecAngles)
 {
-	CBlinkTeleportTarget *pTeleportTarget = (CBlinkTeleportTarget *)CBaseEntity::Create("blink_teleport_target", vecOrigin, vecAngles);
+	CBlinkTeleportEndpoint *pTeleportTarget = (CBlinkTeleportEndpoint *)CBaseEntity::Create("blink_teleport_endpoint", vecOrigin, vecAngles);
 	if (!pTeleportTarget)
 		return NULL;
 
@@ -450,12 +463,14 @@ CBlinkTeleportTarget * CBlinkTeleportTarget::CreateTeleportTargetEnd(CBlinkTelep
 	// turn off all floating / fluid simulation
 	pTeleportTargetPhys->SetCallbackFlags(pTeleportTargetPhys->GetCallbackFlags() & (~CALLBACK_DO_FLUID_SIMULATION));
 
+	DevLog("CreateTeleportTargetEnd worked\n");
+
 	return pTeleportTarget;
 }
 
-CBlinkTeleportTarget * CBlinkTeleportTarget::CreateTeleportTargetBeginning(const Vector &vecOrigin, const QAngle &vecAngles)
+CBlinkTeleportEndpoint * CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(const Vector &vecOrigin, const QAngle &vecAngles)
 {
-	CBlinkTeleportTarget *pTT = (CBlinkTeleportTarget *)CBaseEntity::Create("blink_teleport_target", vecOrigin, vecAngles);
+	CBlinkTeleportEndpoint *pTT = (CBlinkTeleportEndpoint *)CBaseEntity::Create("blink_teleport_endpoint", vecOrigin, vecAngles);
 	if (!pTT)
 		return NULL;
 
@@ -464,6 +479,8 @@ CBlinkTeleportTarget * CBlinkTeleportTarget::CreateTeleportTargetBeginning(const
 	// Disable movement on the root, we'll move this thing manually.
 	pTT->VPhysicsInitShadow(false, false);
 	pTT->SetMoveType(MOVETYPE_NONE);
+
+	DevLog("CreateTeleportTargetBeginning worked\n");
 
 	return pTT;
 }
