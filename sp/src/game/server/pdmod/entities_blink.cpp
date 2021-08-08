@@ -391,7 +391,7 @@ void CBlinkTeleporter::InitRootPosition()
 
 void CBlinkTeleporter::CreateStartAndEndEntities()
 {
-	if (!m_hStartEntity)
+	if (m_hStartEntity)
 		return;
 
 	m_hStartEntity = CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
