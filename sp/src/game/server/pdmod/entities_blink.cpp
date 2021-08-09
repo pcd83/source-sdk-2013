@@ -358,19 +358,6 @@ private:
 	Vector m_vecRoot, m_vecTip;
 };
 
-void CBlinkTeleporter::Activate()
-{
-	if (m_hStartEntity)
-		return;
-
-	InitRootPosition();
-
-	m_hStartEntity = CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
-	m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(NULL, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
-
-	CreateStartAndEndEntities();
-}
-
 LINK_ENTITY_TO_CLASS(blink_teleporter, CBlinkTeleporter);
 
 BEGIN_DATADESC(CBlinkTeleporter)
@@ -380,12 +367,28 @@ DEFINE_FIELD(m_vecRoot, FIELD_POSITION_VECTOR),
 DEFINE_FIELD(m_vecTip, FIELD_POSITION_VECTOR),
 END_DATADESC()
 
+void CBlinkTeleporter::Activate()
+{
+	if (m_hStartEntity)
+		return;
+
+	InitRootPosition();
+
+	m_hStartEntity = CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
+	m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(this, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
+
+	CreateStartAndEndEntities();
+}
+
 void CBlinkTeleporter::InitRootPosition()
 {
-	Vector origin = GetAbsOrigin();
+	CBasePlayer * player = UTIL_GetLocalPlayer();
+	if (!player)  { return; }
+
+	Vector origin = player->GetAbsOrigin();
 	//m_vecRoot = origin - Vector(0, 0, flTongueAdj);
 	m_vecRoot = origin;
-	m_vecTip = origin + Vector(0, 0, 10); // DEBUG(pd): Just put the ending endpoint above the teleporter entity
+	m_vecTip = origin + Vector(0, 0, 30); // DEBUG(pd): Just put the ending endpoint above the teleporter entity
 	CollisionProp()->MarkSurroundingBoundsDirty();
 }
 
@@ -408,11 +411,11 @@ void CBlinkTeleportEndpoint::Spawn()
 {
 	Precache();
 	SetModel(BLINK_TELEPORT_TARGET_MODEL_NAME);
-	AddEffects(EF_NODRAW);
+	//AddEffects(EF_NODRAW);
 
 	// We don't want this to be solid, because we don't want it to collide with the barnacle.
 	SetSolid(SOLID_VPHYSICS);
-	AddSolidFlags(FSOLID_NOT_SOLID);
+	//AddSolidFlags(FSOLID_NOT_SOLID);
 	BaseClass::Spawn();
 
 	m_pSpring = NULL;
