@@ -2,6 +2,7 @@
 #include "triggers.h"
 #include "vphysics_interface.h"
 #include "physics_saverestore.h"
+#include "vphysics/constraints.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -351,9 +352,11 @@ public:
 private:
 	void InitRootPosition();
 	void CreateStartAndEndEntities();
+	void CreateConstraint();
 
 	CHandle<CBlinkTeleportEndpoint>	m_hStartEntity;
 	CHandle<CBlinkTeleportEndpoint>	m_hEndEntity;
+	IPhysicsConstraint			*m_pConstraint;
 
 	Vector m_vecRoot, m_vecTip;
 };
@@ -363,6 +366,7 @@ LINK_ENTITY_TO_CLASS(blink_teleporter, CBlinkTeleporter);
 BEGIN_DATADESC(CBlinkTeleporter)
 DEFINE_FIELD(m_hStartEntity, FIELD_EHANDLE),
 DEFINE_FIELD(m_hEndEntity, FIELD_EHANDLE),
+DEFINE_PHYSPTR(m_pConstraint),
 DEFINE_FIELD(m_vecRoot, FIELD_POSITION_VECTOR),
 DEFINE_FIELD(m_vecTip, FIELD_POSITION_VECTOR),
 END_DATADESC()
@@ -378,6 +382,7 @@ void CBlinkTeleporter::Activate()
 	m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(this, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
 
 	CreateStartAndEndEntities();
+	CreateConstraint();
 }
 
 void CBlinkTeleporter::InitRootPosition()
@@ -385,10 +390,14 @@ void CBlinkTeleporter::InitRootPosition()
 	CBasePlayer * player = UTIL_GetLocalPlayer();
 	if (!player)  { return; }
 
+	const float height = 25;
+	const float distanceFromPlayer = 100;
+
 	Vector origin = player->GetAbsOrigin();
 	//m_vecRoot = origin - Vector(0, 0, flTongueAdj);
-	m_vecRoot = origin;
-	m_vecTip = origin + Vector(0, 0, 30); // DEBUG(pd): Just put the ending endpoint above the teleporter entity
+	m_vecRoot = origin + Vector(0, distanceFromPlayer, height);
+	//m_vecTip = origin + Vector(0, 0, 30); // DEBUG(pd): Just put the ending endpoint above the teleporter entity
+	m_vecTip = m_vecRoot + Vector(0,0,height); // DEBUG(pd): Just put the ending endpoint above the teleporter entity
 	CollisionProp()->MarkSurroundingBoundsDirty();
 }
 
@@ -401,6 +410,26 @@ void CBlinkTeleporter::CreateStartAndEndEntities()
 	m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(this, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
 	//m_nSpitAttachment = LookupAttachment("StrikeHeadAttach");
 	Assert(m_hStartEntity && m_hEndEntity);
+}
+
+void CBlinkTeleporter::CreateConstraint()
+{
+	if (m_pConstraint)
+	{
+		physenv->DestroyConstraint(m_pConstraint);
+		m_pConstraint = NULL;
+	}
+
+	// Create the new constraint for the standing/ducking player physics object.
+	IPhysicsObject *pPlayerPhys = m_hStartEntity->VPhysicsGetObject();
+	IPhysicsObject *pTonguePhys = m_hEndEntity->VPhysicsGetObject();
+
+	constraint_fixedparams_t fixed;
+	fixed.Defaults();
+	fixed.InitWithCurrentObjectState(pTonguePhys, pPlayerPhys);
+	fixed.constraint.Defaults();
+
+	m_pConstraint = physenv->CreateFixedConstraint(pTonguePhys, pPlayerPhys, NULL, fixed);
 }
 
 //*******************************************************************************************
