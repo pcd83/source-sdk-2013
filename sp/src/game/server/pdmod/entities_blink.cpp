@@ -348,6 +348,9 @@ public:
 	DECLARE_DATADESC();
 
 	virtual void Activate();
+	virtual void Spawn();
+
+	void TeleporterThink();
 
 private:
 	void InitRootPosition();
@@ -364,11 +367,12 @@ private:
 LINK_ENTITY_TO_CLASS(blink_teleporter, CBlinkTeleporter);
 
 BEGIN_DATADESC(CBlinkTeleporter)
-DEFINE_FIELD(m_hStartEntity, FIELD_EHANDLE),
-DEFINE_FIELD(m_hEndEntity, FIELD_EHANDLE),
-DEFINE_PHYSPTR(m_pConstraint),
-DEFINE_FIELD(m_vecRoot, FIELD_POSITION_VECTOR),
-DEFINE_FIELD(m_vecTip, FIELD_POSITION_VECTOR),
+	DEFINE_FIELD(m_hStartEntity, FIELD_EHANDLE),
+	DEFINE_FIELD(m_hEndEntity, FIELD_EHANDLE),
+	DEFINE_PHYSPTR(m_pConstraint),
+	DEFINE_FIELD(m_vecRoot, FIELD_POSITION_VECTOR),
+	DEFINE_FIELD(m_vecTip, FIELD_POSITION_VECTOR),
+	DEFINE_THINKFUNC(TeleporterThink)
 END_DATADESC()
 
 void CBlinkTeleporter::Activate()
@@ -430,6 +434,21 @@ void CBlinkTeleporter::CreateConstraint()
 	fixed.constraint.Defaults();
 
 	m_pConstraint = physenv->CreateFixedConstraint(pTonguePhys, pPlayerPhys, NULL, fixed);
+}
+
+void CBlinkTeleporter::TeleporterThink()
+{
+	DevMsg("TeleporterThink\n");
+	SetNextThink(gpGlobals->curtime + 1);
+}
+
+void CBlinkTeleporter::Spawn()
+{
+	BaseClass::Spawn();
+	Precache();
+
+	SetThink(&CBlinkTeleporter::TeleporterThink);
+	SetNextThink(gpGlobals->curtime + 0.5f);
 }
 
 //*******************************************************************************************
