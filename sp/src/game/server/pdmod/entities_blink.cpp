@@ -357,6 +357,8 @@ private:
 	void CreateStartAndEndEntities();
 	void CreateConstraint();
 
+	void TraceFromPlayerAimInfinitely(trace_t & traceOut);
+
 	CHandle<CBlinkTeleportEndpoint>	m_hStartEntity;
 	CHandle<CBlinkTeleportEndpoint>	m_hEndEntity;
 	IPhysicsConstraint			*m_pConstraint;
@@ -438,8 +440,59 @@ void CBlinkTeleporter::CreateConstraint()
 
 void CBlinkTeleporter::TeleporterThink()
 {
-	DevMsg("TeleporterThink\n");
-	SetNextThink(gpGlobals->curtime + 1);
+	//DevMsg("TeleporterThink\n");
+
+	if (m_hEndEntity)
+	{
+		trace_t trace;
+		TraceFromPlayerAimInfinitely(trace);
+		if (trace.DidHit())
+		{
+			Vector up, down;
+			AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), NULL, NULL, &up);
+
+			m_vecTip = trace.endpos + up * 10; // +100 * forward;
+
+			//m_vecTip = trace.endpos;
+			m_hEndEntity->Teleport(&m_vecTip, NULL, NULL);
+		}
+	}
+
+
+	SetNextThink(gpGlobals->curtime + 0.5f);
+}
+
+void CBlinkTeleporter::TraceFromPlayerAimInfinitely(trace_t & trace)
+{
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	IPhysicsObject *pPhysObject = pPlayer->VPhysicsGetObject();
+
+	//QAngle absEyeAngles = pPlayer->GetAbsAngles();
+	QAngle absEyeAngles = pPlayer->EyeAngles();
+
+	Vector forward, right, up;
+	AngleVectors(absEyeAngles, &forward, &right, &up);
+
+	Vector mins = pPlayer->GetPlayerMins();
+	Vector maxs = pPlayer->GetPlayerMaxs();
+	//maxs.z = mins.z + 1;
+
+	//const bool isTeleport = true;
+	Vector startPosition, endPosition;
+	QAngle angles;
+
+	pPhysObject->GetPosition(&startPosition, &angles);
+
+	endPosition = startPosition;
+
+	endPosition = startPosition + forward * 10000;
+
+	Ray_t ray;
+	ray.Init(startPosition, endPosition, mins, maxs);
+
+	unsigned int mask = MASK_PLAYERSOLID;
+	//unsigned int mask = MASK_SOLID;
+	UTIL_TraceRay(ray, mask, pPlayer, COLLISION_GROUP_DEBRIS, &trace);
 }
 
 void CBlinkTeleporter::Spawn()
