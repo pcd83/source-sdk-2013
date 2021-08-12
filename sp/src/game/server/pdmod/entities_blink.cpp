@@ -384,8 +384,8 @@ void CBlinkTeleporter::Activate()
 
 	InitRootPosition();
 
-	m_hStartEntity = CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
-	m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(this, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
+	//m_hStartEntity = CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
+	//m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(this, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
 
 	CreateStartAndEndEntities();
 	CreateConstraint();
@@ -396,7 +396,7 @@ void CBlinkTeleporter::InitRootPosition()
 	CBasePlayer * player = UTIL_GetLocalPlayer();
 	if (!player)  { return; }
 
-	const float height = 25;
+	const float height = 225;
 	const float distanceFromPlayer = 100;
 
 	Vector origin = player->GetAbsOrigin();
@@ -414,6 +414,12 @@ void CBlinkTeleporter::CreateStartAndEndEntities()
 
 	m_hStartEntity = CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
 	m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(this, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
+
+	m_hEndEntity->VPhysicsInitShadow(false, false);
+	m_hEndEntity->SetMoveType(MOVETYPE_NONE);
+	m_hEndEntity->SetCollisionGroup(COLLISION_GROUP_DEBRIS);
+
+
 	//m_nSpitAttachment = LookupAttachment("StrikeHeadAttach");
 	Assert(m_hStartEntity && m_hEndEntity);
 }
@@ -435,7 +441,7 @@ void CBlinkTeleporter::CreateConstraint()
 	fixed.InitWithCurrentObjectState(pTonguePhys, pPlayerPhys);
 	fixed.constraint.Defaults();
 
-	m_pConstraint = physenv->CreateFixedConstraint(pTonguePhys, pPlayerPhys, NULL, fixed);
+	//m_pConstraint = physenv->CreateFixedConstraint(pTonguePhys, pPlayerPhys, NULL, fixed);
 }
 
 void CBlinkTeleporter::TeleporterThink()
@@ -455,6 +461,8 @@ void CBlinkTeleporter::TeleporterThink()
 
 			//m_vecTip = trace.endpos;
 			m_hEndEntity->Teleport(&m_vecTip, NULL, NULL);
+
+			CollisionProp()->MarkSurroundingBoundsDirty();
 		}
 	}
 
@@ -490,8 +498,8 @@ void CBlinkTeleporter::TraceFromPlayerAimInfinitely(trace_t & trace)
 	Ray_t ray;
 	ray.Init(startPosition, endPosition, mins, maxs);
 
-	unsigned int mask = MASK_PLAYERSOLID;
-	//unsigned int mask = MASK_SOLID;
+	//unsigned int mask = MASK_PLAYERSOLID;
+	unsigned int mask = MASK_SOLID;
 	UTIL_TraceRay(ray, mask, pPlayer, COLLISION_GROUP_DEBRIS, &trace);
 }
 
@@ -555,8 +563,8 @@ CBlinkTeleportEndpoint * CBlinkTeleportEndpoint::CreateTeleportTargetEnd(CBlinkT
 		return NULL;
 
 	pTeleportTarget->VPhysicsInitNormal(pTeleportTarget->GetSolid(), pTeleportTarget->GetSolidFlags(), false);
-	if (!pTeleportTarget->CreateSpring(pTeleportStart))
-		return NULL;
+	//if (!pTeleportTarget->CreateSpring(pTeleportStart))
+	//	return NULL;
 
 	// Set the backpointer to the barnacle
 	pTeleportTarget->m_hTeleporter = pTeleporter;
