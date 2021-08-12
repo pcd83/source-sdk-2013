@@ -467,7 +467,7 @@ void CBlinkTeleporter::TeleporterThink()
 	}
 
 
-	SetNextThink(gpGlobals->curtime + 0.5f);
+	SetNextThink(gpGlobals->curtime + 0.001f);
 }
 
 void CBlinkTeleporter::TraceFromPlayerAimInfinitely(trace_t & trace)
