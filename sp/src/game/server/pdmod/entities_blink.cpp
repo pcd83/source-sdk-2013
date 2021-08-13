@@ -340,6 +340,8 @@ DEFINE_PHYSPTR(m_pSpring),
 END_DATADESC()
 
 //****************************************************************************************
+static ConVar v_blinkTeleporterMinDistance("v_blink_teleporter_min_dist", "150");
+
 class CBlinkTeleporter : public CBaseAnimating
 {
 	DECLARE_CLASS(CBlinkTeleporter, CBaseAnimating);
@@ -450,14 +452,28 @@ void CBlinkTeleporter::TeleporterThink()
 
 	if (m_hEndEntity)
 	{
+		const CBasePlayer * player = UTIL_GetLocalPlayer();
 		trace_t trace;
 		TraceFromPlayerAimInfinitely(trace);
 		if (trace.DidHit())
 		{
-			Vector up, down;
-			AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), NULL, NULL, &up);
+			const Vector playerOrigin = player->GetAbsOrigin();
 
-			m_vecTip = trace.endpos + up * 10; // +100 * forward;
+			Vector up, down;
+			AngleVectors(player->GetAbsAngles(), NULL, NULL, &up);
+
+			const Vector fromPlayerToTracePoint = trace.endpos - playerOrigin;
+
+			const float minDist = v_blinkTeleporterMinDistance.GetFloat();
+
+			if (fromPlayerToTracePoint.LengthSqr() < minDist * minDist)
+			{
+				m_vecTip = fromPlayerToTracePoint.Normalized() * minDist + playerOrigin;
+			}
+			else
+			{
+				m_vecTip = trace.endpos + up * 10; // +100 * forward;
+			}
 
 			//m_vecTip = trace.endpos;
 			m_hEndEntity->Teleport(&m_vecTip, NULL, NULL);
@@ -500,7 +516,9 @@ void CBlinkTeleporter::TraceFromPlayerAimInfinitely(trace_t & trace)
 
 	//unsigned int mask = MASK_PLAYERSOLID;
 	unsigned int mask = MASK_SOLID;
-	UTIL_TraceRay(ray, mask, pPlayer, COLLISION_GROUP_DEBRIS, &trace);
+	int collisionGroup = COLLISION_GROUP_DEBRIS;
+	//int collisionGroup = COLLISION_GROUP_PLAYER;
+	UTIL_TraceRay(ray, mask, pPlayer, collisionGroup, &trace);
 }
 
 void CBlinkTeleporter::Spawn()
