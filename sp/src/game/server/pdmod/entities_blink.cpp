@@ -4,6 +4,8 @@
 #include "physics_saverestore.h"
 #include "vphysics/constraints.h"
 
+#include "entities_blink.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -342,12 +344,15 @@ END_DATADESC()
 //****************************************************************************************
 static ConVar v_blinkTeleporterMinDistance("v_blink_teleporter_min_dist", "150");
 
-class CBlinkTeleporter : public CBaseAnimating
+class CBlinkTeleporter : public CBaseAnimating, public IBlinkTeleporter
 {
 	DECLARE_CLASS(CBlinkTeleporter, CBaseAnimating);
 
 public:
 	DECLARE_DATADESC();
+
+	// IBlinkTeleporter
+	virtual bool GetAbsTargetPosition(Vector * absPos);
 
 	virtual void Activate();
 	virtual void Spawn();
@@ -379,8 +384,21 @@ BEGIN_DATADESC(CBlinkTeleporter)
 	DEFINE_THINKFUNC(TeleporterThink)
 END_DATADESC()
 
+// IBlinkTeleporter
+bool CBlinkTeleporter::GetAbsTargetPosition(Vector * absPos)
+{
+	if (m_hEndEntity)
+	{
+		*absPos = m_vecTip;
+		return true;
+	}
+	return false;
+}
+
 void CBlinkTeleporter::Activate()
 {
+	Assert(0);
+
 	if (m_hStartEntity)
 		return;
 
@@ -525,6 +543,17 @@ void CBlinkTeleporter::Spawn()
 {
 	BaseClass::Spawn();
 	Precache();
+
+	if (m_hStartEntity)
+		return;
+
+	InitRootPosition();
+
+	//m_hStartEntity = CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
+	//m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(this, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
+
+	CreateStartAndEndEntities();
+	CreateConstraint();
 
 	SetThink(&CBlinkTeleporter::TeleporterThink);
 	SetNextThink(gpGlobals->curtime + 0.5f);

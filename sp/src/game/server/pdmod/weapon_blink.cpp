@@ -25,6 +25,8 @@
 
 #include "physics_saverestore.h"
 
+#include "entities_blink.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -54,10 +56,14 @@ public:
 public:
 	virtual void PrimaryAttack();
 
-	virtual void Activate()
+	//virtual void Activate()
+	virtual void Spawn()
 	{
+		m_pTeleporter = (IBlinkTeleporter*)CBaseEntity::Create("blink_teleporter", GetAbsOrigin(), GetAbsAngles());
+
 		DEBUG_SpawnMyModelEntity();
-		BaseClass::Activate();
+		//BaseClass::Activate();
+		BaseClass::Spawn();
 	}
 
 private:
@@ -68,6 +74,7 @@ private:
 	IPhysicsSpring * m_pPhysSpring;
 	CBaseEntity * m_pSpring;
 
+	IBlinkTeleporter * m_pTeleporter;
 
 public:
 
@@ -208,6 +215,7 @@ CWeaponMP5::CWeaponMP5()
 
 	m_pEndEntity = NULL;
 	m_pSpring = NULL;
+	m_pTeleporter = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -411,6 +419,12 @@ void CWeaponMP5::TryTeleport()
 //-----------------------------------------------------------------------------
 void CWeaponMP5::SecondaryAttack()
 {
+	Vector teleporterTargetAbsPosition = GetAbsOrigin();
+	if (m_pTeleporter->GetAbsTargetPosition(&teleporterTargetAbsPosition))
+	{
+		CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+		pPlayer->Teleport(&teleporterTargetAbsPosition, NULL, NULL);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -445,6 +459,8 @@ const WeaponProficiencyInfo_t *CWeaponMP5::GetProficiencyValues()
 
 void CWeaponMP5::DEBUG_SpawnMyModelEntity()
 {
+
+#if 0
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 
 	//QAngle absEyeAngles = pPlayer->GetAbsAngles();
@@ -496,4 +512,6 @@ void CWeaponMP5::DEBUG_SpawnMyModelEntity()
 	*/
 	//m_pSpring = physenv->CreateSpring(m_pEndEntity->VPhysicsGetObject(), VPhysicsGetObject(), &springParams);
 	//m_pSpring = physenv->CreateSpring(VPhysicsGetObject(), m_pEndEntity->VPhysicsGetObject(), &springParams);
+
+#endif
 }
