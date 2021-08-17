@@ -354,8 +354,8 @@ void CWeaponMP5::AddViewKick()
 void CWeaponMP5::PrimaryAttack()
 {
 	BaseClass::PrimaryAttack();
-	//TryTeleport();
-	DEBUG_SpawnMyModelEntity();
+	TryTeleport();
+	//DEBUG_SpawnMyModelEntity();
 }
 
 void CWeaponMP5::TryTeleport()
@@ -419,12 +419,14 @@ void CWeaponMP5::TryTeleport()
 //-----------------------------------------------------------------------------
 void CWeaponMP5::SecondaryAttack()
 {
+#if 0
 	Vector teleporterTargetAbsPosition = GetAbsOrigin();
 	if (m_pTeleporter->GetAbsTargetPosition(&teleporterTargetAbsPosition))
 	{
 		CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 		pPlayer->Teleport(&teleporterTargetAbsPosition, NULL, NULL);
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
