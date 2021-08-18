@@ -353,6 +353,7 @@ public:
 
 	// IBlinkTeleporter
 	virtual bool GetAbsTargetPosition(Vector * absPos);
+	virtual bool IsAbsTargetPositionValid() const;
 
 	virtual void Activate();
 	virtual void Spawn();
@@ -393,6 +394,28 @@ bool CBlinkTeleporter::GetAbsTargetPosition(Vector * absPos)
 		return true;
 	}
 	return false;
+}
+
+bool CBlinkTeleporter::IsAbsTargetPositionValid() const
+{
+	if (!m_hEndEntity) 
+	{
+		return false;
+	}
+	CBasePlayer * pPlayer = UTIL_GetLocalPlayer();
+	if (!pPlayer) { return false; }
+
+	Vector pos = pPlayer->GetAbsOrigin();
+	Vector mins = pPlayer->GetPlayerMins();
+	Vector maxs = pPlayer->GetPlayerMaxs();
+
+	Ray_t ray;
+	ray.Init(pos, pos + Vector(0,0,-20), mins, maxs);
+
+	trace_t trace;
+	UTIL_TraceRay(ray, MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_DEBRIS, &trace);
+
+	return trace.DidHit() == false;
 }
 
 void CBlinkTeleporter::Activate()
@@ -470,12 +493,14 @@ void CBlinkTeleporter::TeleporterThink()
 
 	if (m_hEndEntity)
 	{
-		const CBasePlayer * player = UTIL_GetLocalPlayer();
+		CBasePlayer * player = UTIL_GetLocalPlayer();
 		trace_t trace;
 		TraceFromPlayerAimInfinitely(trace);
 		if (trace.DidHit())
 		{
-			const Vector playerOrigin = player->GetAbsOrigin();
+			//Vector playerOrigin = player->GetAbsOrigin() + player->GetViewOffset();
+			Vector playerOrigin = player->EyePosition();
+			
 
 			Vector up, down;
 			AngleVectors(player->GetAbsAngles(), NULL, NULL, &up);
@@ -491,7 +516,8 @@ void CBlinkTeleporter::TeleporterThink()
 			//}
 			//else
 			{
-				m_vecTip = trace.endpos + up * 10; // +100 * forward;
+				//m_vecTip = trace.endpos + up * 10; // +100 * forward;
+				m_vecTip = trace.endpos;
 			}
 
 			//m_vecTip = trace.endpos;

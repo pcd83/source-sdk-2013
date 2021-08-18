@@ -360,6 +360,8 @@ void CWeaponMP5::PrimaryAttack()
 
 void CWeaponMP5::TryTeleport()
 {
+	if (m_pTeleporter->IsAbsTargetPositionValid() == false) { return; }
+
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	IPhysicsObject *pPhysObject = pPlayer->VPhysicsGetObject();
 
