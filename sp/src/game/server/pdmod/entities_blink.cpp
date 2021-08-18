@@ -342,7 +342,7 @@ DEFINE_PHYSPTR(m_pSpring),
 END_DATADESC()
 
 //****************************************************************************************
-static ConVar v_blinkTeleporterMinDistance("v_blink_teleporter_min_dist", "150");
+static ConVar v_blinkTeleporterMinDistance("v_blink_teleporter_min_dist", "50");
 
 class CBlinkTeleporter : public CBaseAnimating, public IBlinkTeleporter
 {
@@ -482,21 +482,24 @@ void CBlinkTeleporter::TeleporterThink()
 
 			const Vector fromPlayerToTracePoint = trace.endpos - playerOrigin;
 
-			const float minDist = v_blinkTeleporterMinDistance.GetFloat();
+			//const float minDist = v_blinkTeleporterMinDistance.GetFloat();
 
-			if (fromPlayerToTracePoint.LengthSqr() < minDist * minDist)
-			{
-				m_vecTip = fromPlayerToTracePoint.Normalized() * minDist + playerOrigin;
-			}
-			else
+			//if (fromPlayerToTracePoint.LengthSqr() < minDist * minDist)
+			//{
+				// NOTE(pd): Don't change the tip position if we're too close
+				//m_vecTip = fromPlayerToTracePoint.Normalized() * minDist + playerOrigin;
+			//}
+			//else
 			{
 				m_vecTip = trace.endpos + up * 10; // +100 * forward;
 			}
 
 			//m_vecTip = trace.endpos;
-			m_hEndEntity->Teleport(&m_vecTip, NULL, NULL);
+			//m_hEndEntity->Teleport(&m_vecTip, NULL, NULL);
+			m_hEndEntity->SetAbsOrigin(m_vecTip);
 
 			CollisionProp()->MarkSurroundingBoundsDirty();
+			m_hEndEntity->CollisionProp()->MarkSurroundingBoundsDirty();
 		}
 	}
 
