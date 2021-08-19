@@ -518,6 +518,7 @@ void CBlinkTeleporter::TeleporterThink()
 			{
 				//m_vecTip = trace.endpos + up * 10; // +100 * forward;
 				m_vecTip = trace.endpos;
+				m_vecTip.z = playerOrigin.z;
 			}
 
 			//m_vecTip = trace.endpos;
@@ -538,6 +539,11 @@ void CBlinkTeleporter::TraceFromPlayerAimInfinitely(trace_t & trace)
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	IPhysicsObject *pPhysObject = pPlayer->VPhysicsGetObject();
 
+	Vector startPosition, endPosition;
+	QAngle angles;
+
+	pPhysObject->GetPosition(&startPosition, &angles);
+
 	//QAngle absEyeAngles = pPlayer->GetAbsAngles();
 	QAngle absEyeAngles = pPlayer->EyeAngles();
 
@@ -549,10 +555,6 @@ void CBlinkTeleporter::TraceFromPlayerAimInfinitely(trace_t & trace)
 	//maxs.z = mins.z + 1;
 
 	//const bool isTeleport = true;
-	Vector startPosition, endPosition;
-	QAngle angles;
-
-	pPhysObject->GetPosition(&startPosition, &angles);
 
 	endPosition = startPosition;
 
