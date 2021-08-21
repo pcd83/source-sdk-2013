@@ -365,7 +365,7 @@ private:
 	void CreateStartAndEndEntities();
 	void CreateConstraint();
 
-	void TraceFromPlayerAimInfinitely(trace_t & traceOut);
+	//void TraceFromPlayerAimInfinitely(trace_t & traceOut);
 
 	CHandle<CBlinkTeleportEndpoint>	m_hStartEntity;
 	CHandle<CBlinkTeleportEndpoint>	m_hEndEntity;
@@ -390,7 +390,7 @@ bool CBlinkTeleporter::GetAbsTargetPosition(Vector * absPos)
 {
 	if (m_hEndEntity)
 	{
-		*absPos = m_vecTip;
+		*absPos = m_hEndEntity->GetAbsOrigin();
 		return true;
 	}
 	return false;
@@ -458,7 +458,7 @@ void CBlinkTeleporter::CreateStartAndEndEntities()
 	m_hStartEntity = CBlinkTeleportEndpoint::CreateTeleportTargetBeginning(m_vecRoot, QAngle(90, 0, 0));
 	m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(this, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
 
-	m_hEndEntity->VPhysicsInitShadow(false, false);
+	//m_hEndEntity->VPhysicsInitShadow(false, false);
 	m_hEndEntity->SetMoveType(MOVETYPE_NONE);
 	m_hEndEntity->SetCollisionGroup(COLLISION_GROUP_DEBRIS);
 
@@ -518,7 +518,7 @@ void CBlinkTeleporter::TeleporterThink()
 			{
 				//m_vecTip = trace.endpos + up * 10; // +100 * forward;
 				m_vecTip = trace.endpos;
-				m_vecTip.z = playerOrigin.z;
+				//m_vecTip.z = playerOrigin.z;
 			}
 
 			//m_vecTip = trace.endpos;
@@ -534,7 +534,7 @@ void CBlinkTeleporter::TeleporterThink()
 	SetNextThink(gpGlobals->curtime + 0.001f);
 }
 
-void CBlinkTeleporter::TraceFromPlayerAimInfinitely(trace_t & trace)
+void TraceFromPlayerAimInfinitely(trace_t & trace)
 {
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	IPhysicsObject *pPhysObject = pPlayer->VPhysicsGetObject();

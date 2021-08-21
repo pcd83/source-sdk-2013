@@ -360,9 +360,19 @@ void CWeaponMP5::PrimaryAttack()
 
 void CWeaponMP5::TryTeleport()
 {
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+#if 1
+	trace_t trace;
+	TraceFromPlayerAimInfinitely(trace);
+#elif 0
+
 	if (m_pTeleporter->IsAbsTargetPositionValid() == false) { return; }
 
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	Vector teleportTargetPosition;
+	if (!m_pTeleporter->GetAbsTargetPosition(&teleportTargetPosition)) { return; }
+	pPlayer->Teleport(&teleportTargetPosition, NULL, NULL);
+	
+#elif 0
 	IPhysicsObject *pPhysObject = pPlayer->VPhysicsGetObject();
 
 	//QAngle absEyeAngles = pPlayer->GetAbsAngles();
@@ -396,6 +406,7 @@ void CWeaponMP5::TryTeleport()
 	CTraceFilterWorldOnly filter;
 	UTIL_TraceHull(startPosition, endPosition, mins, maxs, MASK_SOLID_BRUSHONLY, &filter, &trace);
 #endif
+#endif
 
 	if (trace.DidHit())
 	{
@@ -405,14 +416,15 @@ void CWeaponMP5::TryTeleport()
 
 		Vector teleportPosition = trace.endpos + up * 10; // +100 * forward;
 
+#if 0
 		ConMsg("Pistol Teleport\n");
 		ConMsg(" -- Start Position: %f, %f, %f\n", startPosition.x, startPosition.y, startPosition.z);
 		ConMsg(" -- End Position: %f, %f, %f\n", endPosition.x, endPosition.y, endPosition.z);
 		ConMsg(" -- Trace Result End Position: %f, %f, %f\n", trace.endpos.x, trace.endpos.y, trace.endpos.z);
-
+#endif
 		pPlayer->Teleport(&teleportPosition, NULL, NULL);
 
-		ConMsg(" -- End\n");
+		//ConMsg(" -- End\n");
 	}
 }
 

@@ -1,3 +1,5 @@
+void TraceFromPlayerAimInfinitely(trace_t & trace);
+
 class IBlinkTeleporter
 {
 public:
