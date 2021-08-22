@@ -554,6 +554,9 @@ void TraceFromPlayerAimInfinitely(trace_t & trace)
 	Vector maxs = pPlayer->GetPlayerMaxs();
 	//maxs.z = mins.z + 1;
 
+	startPosition = pPlayer->EyePosition();
+	forward = pPlayer->EyeDirection3D();
+
 	//const bool isTeleport = true;
 
 	endPosition = startPosition;
