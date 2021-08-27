@@ -524,6 +524,10 @@ void CBlinkTeleporter::TeleporterThink()
 
 			//m_vecTip = trace.endpos;
 			//m_hEndEntity->Teleport(&m_vecTip, NULL, NULL);
+			QAngle prevAngles = m_hEndEntity->GetAbsAngles();
+			prevAngles[YAW] = fmodf(gpGlobals->curtime * 20, 360);
+			m_hEndEntity->SetAbsAngles(prevAngles);
+
 			m_hEndEntity->SetAbsOrigin(m_vecTip);
 
 			CollisionProp()->MarkSurroundingBoundsDirty();
