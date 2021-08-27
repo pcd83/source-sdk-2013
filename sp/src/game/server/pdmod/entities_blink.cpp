@@ -306,7 +306,8 @@ class CBlinkTeleporter;
 //*************************************************
 // Teleport target
 //*************************************************
-#define BLINK_TELEPORT_TARGET_MODEL_NAME "models/props_junk/rock001a.mdl"
+//#define BLINK_TELEPORT_TARGET_MODEL_NAME "models/props_junk/rock001a.mdl"
+#define BLINK_TELEPORT_TARGET_MODEL_NAME "models/generic_plane_01.mdl"
 
 class CBlinkTeleportEndpoint : public CBaseAnimating
 {
@@ -587,7 +588,7 @@ void CBlinkTeleporter::Spawn()
 	//m_hEndEntity = CBlinkTeleportEndpoint::CreateTeleportTargetEnd(this, m_hStartEntity, m_vecTip, QAngle(0, 0, 0));
 
 	CreateStartAndEndEntities();
-	CreateConstraint();
+	//CreateConstraint();
 
 	SetThink(&CBlinkTeleporter::TeleporterThink);
 	SetNextThink(gpGlobals->curtime + 0.5f);
@@ -651,10 +652,10 @@ CBlinkTeleportEndpoint * CBlinkTeleportEndpoint::CreateTeleportTargetEnd(CBlinkT
 	pTeleportTarget->m_hTeleporter = pTeleporter;
 
 	// Don't collide with the world
-	IPhysicsObject *pTeleportTargetPhys = pTeleportTarget->VPhysicsGetObject();
+	//IPhysicsObject *pTeleportTargetPhys = pTeleportTarget->VPhysicsGetObject();
 
 	// turn off all floating / fluid simulation
-	pTeleportTargetPhys->SetCallbackFlags(pTeleportTargetPhys->GetCallbackFlags() & (~CALLBACK_DO_FLUID_SIMULATION));
+	//pTeleportTargetPhys->SetCallbackFlags(pTeleportTargetPhys->GetCallbackFlags() & (~CALLBACK_DO_FLUID_SIMULATION));
 
 	DevLog("CreateTeleportTargetEnd worked\n");
 
